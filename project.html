@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>notcpu .bat obfuscator</title>
+  <style>
+    body {
+      background: #0d0d0d; color: #00ffae;
+      font-family: monospace; text-align: center;
+      padding: 30px;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 1rem;
+      background: #1f1f1f;
+      color: #00ffae;
+      border: 1px solid #00ffae;
+      border-radius: 5px;
+    }
+    #output { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>notcpu .bat obfuscator</h1>
+  <input type="file" id="fileInput" accept=".bat"><br>
+  <input type="number" id="passes" value="1" min="1" max="20"><br>
+  <button onclick="handle()">Obfuscate</button>
+  <div id="output"></div>
+
+  <script src="obfuscator.js"></script>
+  <script>
+    async function handle() {
+      const out = document.getElementById('output');
+      out.innerHTML = '';
+      
+      const file = document.getElementById('fileInput').files[0];
+      const passes = parseInt(document.getElementById('passes').value) || 1;
+      if (!file) return alert("Upload a file first");
+
+      const text = await file.text(); // preserve CRLF
+      const ob = batchfileObfuscate(text, passes);
+
+      // Convert to UTF-16LE + BOM
+      const encoder = new TextEncoder("utf-16le");
+      const buf = encoder.encode(ob);
+      const bom = new Uint8Array([0xFF, 0xFE]);
+      const blob = new Blob([bom, buf], {type:"text/plain"});
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = file.name.replace(/\.bat$/i, '') + "_obf.bat";
+      link.textContent = "[+] Download obfuscated .BAT";
+      link.style = "display:inline-block;color:#00ffae;";
+
+      out.appendChild(link);
+    }
+  </script>
+</body>
+</html>
